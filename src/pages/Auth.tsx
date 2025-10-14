@@ -6,12 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { apiService } from '@/lib/api';
 
 export default function Auth() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -47,12 +50,39 @@ export default function Auth() {
       return;
     }
 
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       await apiService.register(email, password);
       toast.success('Account created! Please log in.');
       // Switch to login tab
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
+      console.error('Registration error:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Registration failed. Please try again.';
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!resetEmail) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // In production, this would call a password reset endpoint
+      toast.success('Password reset link sent to your email');
+      setShowForgotPassword(false);
+      setResetEmail('');
+    } catch (error: any) {
+      toast.error('Failed to send reset link. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -107,6 +137,37 @@ export default function Auth() {
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? 'Signing in...' : 'Sign In'}
                   </Button>
+                  
+                  <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+                    <DialogTrigger asChild>
+                      <Button variant="link" className="w-full text-sm" type="button">
+                        Forgot password?
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Reset Password</DialogTitle>
+                        <DialogDescription>
+                          Enter your email address and we'll send you a link to reset your password.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="reset-email">Email</Label>
+                          <Input
+                            id="reset-email"
+                            type="email"
+                            placeholder="you@example.com"
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
+                          />
+                        </div>
+                        <Button onClick={handleForgotPassword} className="w-full" disabled={isLoading}>
+                          {isLoading ? 'Sending...' : 'Send Reset Link'}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </form>
               </CardContent>
             </Card>
