@@ -7,6 +7,9 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopNav } from "@/components/TopNav";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import Home from "./pages/Home";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import LiveStocks from "./pages/LiveStocks";
 import AIAdvisory from "./pages/AIAdvisory";
@@ -36,7 +39,13 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/auth" element={<Auth />} />
+          
+          {/* Protected Routes */}
           <Route
             path="/stocks"
             element={
@@ -87,7 +96,6 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Auth />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
