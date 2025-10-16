@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,56 +61,83 @@ const handler = async (req: Request): Promise<Response> => {
       'reset-password': 'Reset Your TradeX Password'
     };
 
-    const emailResponse = await resend.emails.send({
-      from: "TradeX Security <onboarding@resend.dev>",
-      to: [email],
-      subject: emailSubjects[type],
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <style>
-              body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }
-              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
-              .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
-              .code-box { background: white; padding: 25px; border-radius: 10px; text-align: center; margin: 20px 0; border: 2px dashed #2563eb; }
-              .code { font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #2563eb; font-family: 'Courier New', monospace; }
-              .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; }
-              .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
-              h1 { margin: 0; font-size: 28px; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1>🔐 Verification Code</h1>
-              </div>
-              <div class="content">
-                <p>Enter this code to complete your ${type === 'login' ? 'login' : type === 'signup' ? 'signup' : 'password reset'}:</p>
-                
-                <div class="code-box">
-                  <div class="code">${code}</div>
-                  <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;">Valid for 2 minutes</p>
-                </div>
-                
-                <div class="warning">
-                  <strong>⚠️ Security Notice:</strong><br>
-                  Never share this code with anyone. TradeX will never ask for this code via phone or email.
-                </div>
-                
-                <p>If you didn't request this code, please ignore this email or contact support if you have concerns.</p>
-              </div>
-              <div class="footer">
-                <p>© 2025 TradeX. All rights reserved.</p>
-              </div>
+    const smtpHost = Deno.env.get("SMTP_HOST");
+    const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587");
+    const smtpUser = Deno.env.get("SMTP_USER");
+    const smtpPassword = Deno.env.get("SMTP_PASSWORD");
+    const fromEmail = Deno.env.get("FROM_EMAIL");
+
+    if (!smtpHost || !smtpUser || !smtpPassword || !fromEmail) {
+      throw new Error("SMTP configuration is incomplete");
+    }
+
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+            .code-box { background: white; padding: 25px; border-radius: 10px; text-align: center; margin: 20px 0; border: 2px dashed #2563eb; }
+            .code { font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #2563eb; font-family: 'Courier New', monospace; }
+            .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+            h1 { margin: 0; font-size: 28px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🔐 Verification Code</h1>
             </div>
-          </body>
-        </html>
-      `,
+            <div class="content">
+              <p>Enter this code to complete your ${type === 'login' ? 'login' : type === 'signup' ? 'signup' : 'password reset'}:</p>
+              
+              <div class="code-box">
+                <div class="code">${code}</div>
+                <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;">Valid for 2 minutes</p>
+              </div>
+              
+              <div class="warning">
+                <strong>⚠️ Security Notice:</strong><br>
+                Never share this code with anyone. TradeX will never ask for this code via phone or email.
+              </div>
+              
+              <p>If you didn't request this code, please ignore this email or contact support if you have concerns.</p>
+            </div>
+            <div class="footer">
+              <p>© 2025 TradeX. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const client = new SMTPClient({
+      connection: {
+        hostname: smtpHost,
+        port: smtpPort,
+        tls: true,
+        auth: {
+          username: smtpUser,
+          password: smtpPassword,
+        },
+      },
     });
 
-    console.log("2FA email sent successfully:", emailResponse);
+    await client.send({
+      from: fromEmail,
+      to: email,
+      subject: emailSubjects[type],
+      content: emailHtml,
+      html: emailHtml,
+    });
+
+    await client.close();
+
+    console.log("2FA email sent successfully via SMTP");
 
     return new Response(
       JSON.stringify({ success: true, message: "2FA code sent successfully" }),

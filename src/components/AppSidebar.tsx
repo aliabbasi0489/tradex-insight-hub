@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   TrendingUp,
   Sparkles,
@@ -7,6 +7,7 @@ import {
   MessageSquare,
   LogOut,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -30,9 +31,13 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    window.location.href = '/auth';
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (!error) {
+      navigate('/auth', { replace: true });
+    }
   };
 
   return (
