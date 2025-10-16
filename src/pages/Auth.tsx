@@ -44,15 +44,6 @@ export default function Auth() {
         navigate("/dashboard");
       }
     });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        navigate("/dashboard");
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -99,13 +90,14 @@ export default function Auth() {
 
     if (data.user) {
       toast({
-        title: "Success!",
-        description: "Account created successfully. You can now sign in.",
+        title: "Account created",
+        description: "You can now sign in with your credentials.",
       });
       // Clear form
       setSignupEmail("");
       setSignupPassword("");
       setConfirmPassword("");
+      // Don't auto-login, user needs to manually sign in
     }
   };
 

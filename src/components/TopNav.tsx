@@ -14,8 +14,10 @@ export function TopNav() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/auth');
+    const { error } = await supabase.auth.signOut();
+    if (!error) {
+      navigate('/auth', { replace: true });
+    }
   };
 
   return (
