@@ -15,7 +15,7 @@ import ResetPassword from "./pages/ResetPassword";
 import LiveStocks from "./pages/LiveStocks";
 import AIAdvisory from "./pages/AIAdvisory";
 import Dashboard from "./pages/Dashboard";
-import Binance from "./pages/Binance";
+
 import Chatbot from "./pages/Chatbot";
 import NotFound from "./pages/NotFound";
 
@@ -75,16 +75,6 @@ const App = () => (
               <ProtectedRoute>
                 <AppLayout>
                   <Dashboard />
-                </AppLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/binance"
-            element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <Binance />
                 </AppLayout>
               </ProtectedRoute>
             }

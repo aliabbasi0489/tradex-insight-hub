@@ -344,20 +344,9 @@ export default function Auth() {
             </div>
             
             <div>
-              <h3 className="font-semibold mb-4">Product</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition-colors cursor-pointer">Features</li>
-                <li className="hover:text-primary transition-colors cursor-pointer">Pricing</li>
-                <li className="hover:text-primary transition-colors cursor-pointer">Security</li>
-              </ul>
-            </div>
-            
-            <div>
               <h3 className="font-semibold mb-4">Company</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="hover:text-primary transition-colors cursor-pointer">About</li>
-                <li className="hover:text-primary transition-colors cursor-pointer">Blog</li>
-                <li className="hover:text-primary transition-colors cursor-pointer">Careers</li>
               </ul>
             </div>
             
@@ -365,8 +354,6 @@ export default function Auth() {
               <h3 className="font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="hover:text-primary transition-colors cursor-pointer">Contact</li>
-                <li className="hover:text-primary transition-colors cursor-pointer">Help Center</li>
-                <li className="hover:text-primary transition-colors cursor-pointer">Documentation</li>
               </ul>
             </div>
           </div>

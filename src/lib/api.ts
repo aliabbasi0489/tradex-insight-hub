@@ -187,25 +187,17 @@ export const apiService = {
   },
 
   // Predictions
-  getPrediction: async (ticker: string, period: string): Promise<PredictionResponse> => {
+  getPrediction: async (ticker: string, predictionType: string, days: number): Promise<PredictionResponse> => {
     try {
       const { data, error } = await supabase.functions.invoke('stock-prediction', {
-        body: { ticker, period }
+        body: { ticker, prediction_type: predictionType, days }
       });
       
       if (error) throw error;
       return data;
     } catch (error: any) {
       console.error('Error getting prediction:', error);
-      // Fallback to demo data if API fails
-      const periods = period === 'Days' ? 30 : period === 'Weeks' ? 12 : 4;
-      return {
-        ticker: ticker.toUpperCase(),
-        forecast_data: Array.from({ length: periods }, (_, i) => ({
-          time: `${period} ${i + 1}`,
-          predicted_price: Math.random() * 500 + 50
-        }))
-      };
+      throw error;
     }
   },
 

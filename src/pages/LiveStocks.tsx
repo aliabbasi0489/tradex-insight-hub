@@ -49,18 +49,18 @@ export default function LiveStocks() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {POPULAR_TICKERS.map((ticker) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {POPULAR_TICKERS.slice(0, 2).map((ticker) => (
           <TradingViewIframe key={ticker} symbol={`NASDAQ:${ticker}`} height="400px" />
         ))}
       </div>
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="max-w-6xl h-[80vh]">
-          <DialogHeader>
+        <DialogContent className="max-w-[95vw] w-full h-[90vh] p-0">
+          <DialogHeader className="px-6 pt-6">
             <DialogTitle>{selectedSymbol}</DialogTitle>
           </DialogHeader>
-          <div className="flex-1">
+          <div className="flex-1 px-6 pb-6 h-[calc(90vh-80px)]">
             <TradingViewIframe symbol={selectedSymbol} height="100%" />
           </div>
         </DialogContent>

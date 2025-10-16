@@ -25,7 +25,6 @@ const menuItems = [
   { title: "Live Stock Data", url: "/stocks", icon: TrendingUp },
   { title: "AI Advisory", url: "/advisory", icon: Sparkles },
   { title: "My Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "TradeX/Binance", url: "/binance", icon: Bitcoin },
   { title: "Chatbot", url: "/chat", icon: MessageSquare },
 ];
 

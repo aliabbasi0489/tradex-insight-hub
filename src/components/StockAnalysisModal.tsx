@@ -23,7 +23,8 @@ interface StockAnalysisModalProps {
 
 export function StockAnalysisModal({ stock, open, onOpenChange }: StockAnalysisModalProps) {
   const [showPredictionForm, setShowPredictionForm] = useState(false);
-  const [period, setPeriod] = useState<'Days' | 'Weeks' | 'Seasons' | 'Occasions'>('Days');
+  const [predictionType, setPredictionType] = useState<'Open' | 'High' | 'Low' | 'Close' | 'Volume'>('Close');
+  const [predictionDays, setPredictionDays] = useState<7 | 15 | 30>(7);
   const [prediction, setPrediction] = useState<PredictionResponse | null>(null);
   const [isLoadingPrediction, setIsLoadingPrediction] = useState(false);
   const [triggerType, setTriggerType] = useState<'price' | 'date' | 'event'>('price');
@@ -33,7 +34,7 @@ export function StockAnalysisModal({ stock, open, onOpenChange }: StockAnalysisM
   const handleGetPrediction = async () => {
     setIsLoadingPrediction(true);
     try {
-      const data = await apiService.getPrediction(stock.ticker, period);
+      const data = await apiService.getPrediction(stock.ticker, predictionType, predictionDays);
       setPrediction(data);
       toast.success('Prediction generated successfully!');
     } catch (error: any) {
@@ -96,26 +97,42 @@ export function StockAnalysisModal({ stock, open, onOpenChange }: StockAnalysisM
             </>
           ) : (
             <>
-              {/* Period Selection Form */}
+              {/* LSTM Model Prediction Form */}
               <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <Label>Prediction Period</Label>
-                    <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label>Prediction Type</Label>
+                    <Select value={predictionType} onValueChange={(v) => setPredictionType(v as any)}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Days">Days</SelectItem>
-                        <SelectItem value="Weeks">Weeks</SelectItem>
-                        <SelectItem value="Seasons">Seasons</SelectItem>
-                        <SelectItem value="Occasions">Occasions</SelectItem>
+                        <SelectItem value="Open">Open</SelectItem>
+                        <SelectItem value="High">High</SelectItem>
+                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="Close">Close</SelectItem>
+                        <SelectItem value="Volume">Volume</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button onClick={handleGetPrediction} disabled={isLoadingPrediction} className="mt-6">
-                    {isLoadingPrediction ? 'Loading...' : 'Generate Prediction'}
-                  </Button>
+                  <div>
+                    <Label>Prediction Days</Label>
+                    <Select value={predictionDays.toString()} onValueChange={(v) => setPredictionDays(parseInt(v) as any)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="7">7 Days</SelectItem>
+                        <SelectItem value="15">15 Days</SelectItem>
+                        <SelectItem value="30">30 Days</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end">
+                    <Button onClick={handleGetPrediction} disabled={isLoadingPrediction} className="w-full">
+                      {isLoadingPrediction ? 'Loading...' : 'Generate Prediction'}
+                    </Button>
+                  </div>
                 </div>
 
                 {prediction && (
