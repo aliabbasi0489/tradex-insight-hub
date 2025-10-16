@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.chatbot]
 verify_jwt = false
+
+[functions.stock-prediction]
+verify_jwt = false

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { supabase } from '@/integrations/supabase/client';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
@@ -187,7 +188,16 @@ export const apiService = {
 
   // Predictions
   getPrediction: async (ticker: string, period: string): Promise<PredictionResponse> => {
-    if (DEMO_MODE) {
+    try {
+      const { data, error } = await supabase.functions.invoke('stock-prediction', {
+        body: { ticker, period }
+      });
+      
+      if (error) throw error;
+      return data;
+    } catch (error: any) {
+      console.error('Error getting prediction:', error);
+      // Fallback to demo data if API fails
       const periods = period === 'Days' ? 30 : period === 'Weeks' ? 12 : 4;
       return {
         ticker: ticker.toUpperCase(),
@@ -196,23 +206,6 @@ export const apiService = {
           predicted_price: Math.random() * 500 + 50
         }))
       };
-    }
-
-    try {
-      const response = await api.get(`/api/predict_stock?ticker=${ticker}&period=${period}`);
-      return response.data;
-    } catch (error: any) {
-      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        const periods = period === 'Days' ? 30 : period === 'Weeks' ? 12 : 4;
-        return {
-          ticker: ticker.toUpperCase(),
-          forecast_data: Array.from({ length: periods }, (_, i) => ({
-            time: `${period} ${i + 1}`,
-            predicted_price: Math.random() * 500 + 50
-          }))
-        };
-      }
-      throw error;
     }
   },
 
