@@ -1,8 +1,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const client = new SMTPClient({
+  connection: {
+    hostname: Deno.env.get("SMTP_HOST")!,
+    port: Number(Deno.env.get("SMTP_PORT")),
+    tls: true,
+    auth: {
+      username: Deno.env.get("SMTP_USER")!,
+      password: Deno.env.get("SMTP_PASSWORD")!,
+    },
+  },
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,9 +58,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Send confirmation email to user
-    const emailResponse = await resend.emails.send({
-      from: "TradeX <onboarding@resend.dev>",
-      to: [email],
+    await client.send({
+      from: Deno.env.get("FROM_EMAIL")!,
+      to: email,
       subject: "We received your message!",
       html: `
         <!DOCTYPE html>
@@ -95,7 +105,8 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    await client.close();
+    console.log("Email sent successfully");
 
     return new Response(
       JSON.stringify({ success: true, message: "Contact form submitted successfully" }),

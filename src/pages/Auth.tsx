@@ -86,7 +86,6 @@ export default function Auth() {
       return false;
     }
 
-    setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('verify-2fa-code', {
         body: {
@@ -105,8 +104,6 @@ export default function Auth() {
       console.error('Verification error:', error);
       toast.error('Verification failed');
       return false;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -127,10 +124,13 @@ export default function Auth() {
   };
 
   const completeLogin = async () => {
-    const verified = await verify2FACode();
-    if (!verified) return;
-
     setIsLoading(true);
+    const verified = await verify2FACode();
+    if (!verified) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: currentEmail,
@@ -180,10 +180,13 @@ export default function Auth() {
   };
 
   const completeSignup = async () => {
-    const verified = await verify2FACode();
-    if (!verified) return;
-
     setIsLoading(true);
+    const verified = await verify2FACode();
+    if (!verified) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signUp({
         email: currentEmail,
@@ -219,10 +222,13 @@ export default function Auth() {
   };
 
   const completePasswordReset = async () => {
-    const verified = await verify2FACode();
-    if (!verified) return;
-
     setIsLoading(true);
+    const verified = await verify2FACode();
+    if (!verified) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(currentEmail);
 
