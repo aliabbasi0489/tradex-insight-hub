@@ -20,17 +20,22 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const AppLayout = ({ children }: { children: React.ReactNode }) => (
-  <SidebarProvider>
-    <div className="flex min-h-screen w-full">
-      <AppSidebar />
-      <div className="flex-1 flex flex-col">
-        <TopNav />
-        <main className="flex-1 p-6">{children}</main>
+const AppLayout = ({ children }: { children: React.ReactNode }) => {
+  const { useSessionManagement } = require('@/hooks/useSessionManagement');
+  useSessionManagement();
+  
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col">
+          <TopNav />
+          <main className="flex-1 p-6">{children}</main>
+        </div>
       </div>
-    </div>
-  </SidebarProvider>
-);
+    </SidebarProvider>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

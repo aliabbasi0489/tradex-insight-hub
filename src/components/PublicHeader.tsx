@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, LogOut, LayoutDashboard } from 'lucide-react';
 import {
@@ -14,6 +14,9 @@ export function PublicHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  const isAuthPage = location.pathname === '/auth';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -100,7 +103,7 @@ export function PublicHeader() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
+            ) : !isAuthPage && (
               <>
                 <Button variant="ghost" onClick={() => navigate('/auth')}>
                   Login

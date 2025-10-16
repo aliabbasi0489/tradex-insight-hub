@@ -16,7 +16,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Mail, MessageSquare, Bug, Send, MapPin, Phone, Clock } from 'lucide-react';
+import { Mail, MessageSquare, Bug, Send, MapPin, Phone, Clock, TrendingUp } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Contact() {
   const [heroRef, heroInView] = useInView({ triggerOnce: true, threshold: 0.1 });
@@ -35,18 +36,34 @@ export default function Contact() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // Call edge function to send email and store in database
+      const { error } = await supabase.functions.invoke('send-contact-email', {
+        body: {
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          messageType: formData.type,
+          message: formData.message,
+        },
+      });
 
-    toast.success('Message sent successfully! We\'ll get back to you soon.');
-    setFormData({
-      name: '',
-      email: '',
-      subject: '',
-      type: 'sales',
-      message: '',
-    });
-    setIsSubmitting(false);
+      if (error) throw error;
+
+      toast.success('Your query has been submitted. Thank you! Check your email for confirmation.');
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        type: 'sales',
+        message: '',
+      });
+    } catch (error: any) {
+      console.error('Contact form error:', error);
+      toast.error('Failed to submit form. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const contactInfo = [
@@ -336,9 +353,59 @@ export default function Contact() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-12">
-        <div className="container mx-auto px-6 text-center text-muted-foreground">
-          <p>&copy; 2025 TradeX. All rights reserved.</p>
+      <footer className="border-t border-border py-16 bg-card/50">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-4 gap-12 mb-12">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  TradeX
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                AI-powered trading platform for smarter investment decisions
+              </p>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Product</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="hover:text-primary transition-colors cursor-pointer">Features</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Pricing</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Security</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Company</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="hover:text-primary transition-colors cursor-pointer">About</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Blog</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Careers</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="hover:text-primary transition-colors cursor-pointer">Contact</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Help Center</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Documentation</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-muted-foreground">&copy; 2025 TradeX. All rights reserved.</p>
+            <div className="flex gap-6 text-sm text-muted-foreground">
+              <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-primary transition-colors">Cookie Policy</a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

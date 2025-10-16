@@ -15,6 +15,7 @@ import {
   ArrowRight,
   CheckCircle2,
 } from 'lucide-react';
+import { TradingViewIframe } from '@/components/TradingViewIframe';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -151,6 +152,34 @@ export default function Home() {
         </div>
       </section>
 
+      {/* TradingView Section */}
+      <section className="py-20 bg-card/30">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="max-w-5xl mx-auto"
+          >
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4">
+                Live Market Data
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  {' '}at Your Fingertips
+                </span>
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                Track real-time stock movements with our integrated TradingView charts
+              </p>
+            </div>
+            <div className="bg-card rounded-3xl p-8 shadow-2xl border-2 border-primary/10">
+              <TradingViewIframe symbol="NASDAQ:AAPL" height="500px" />
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-20 relative">
         <div className="container mx-auto px-6">
@@ -230,9 +259,59 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-12">
-        <div className="container mx-auto px-6 text-center text-muted-foreground">
-          <p>&copy; 2025 TradeX. All rights reserved.</p>
+      <footer className="border-t border-border py-16 bg-card/50">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-4 gap-12 mb-12">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  TradeX
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                AI-powered trading platform for smarter investment decisions
+              </p>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Product</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="hover:text-primary transition-colors cursor-pointer">Features</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Pricing</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Security</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Company</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="hover:text-primary transition-colors cursor-pointer">About</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Blog</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Careers</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="hover:text-primary transition-colors cursor-pointer">Contact</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Help Center</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Documentation</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-muted-foreground">&copy; 2025 TradeX. All rights reserved.</p>
+            <div className="flex gap-6 text-sm text-muted-foreground">
+              <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-primary transition-colors">Cookie Policy</a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
