@@ -1,8 +1,34 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const smtpHost = Deno.env.get('SMTP_HOST');
+const smtpPort = Number(Deno.env.get('SMTP_PORT') ?? 587);
+const smtpUser = Deno.env.get('SMTP_USER');
+const smtpPass = Deno.env.get('SMTP_PASSWORD');
+const fromEmail = Deno.env.get('FROM_EMAIL') || Deno.env.get('FROM_MAIL') || 'no-reply@example.com';
+
+const sendEmail = async (to: string, subject: string, html: string) => {
+  const client = new SMTPClient({
+    connection: {
+      hostname: smtpHost!,
+      port: smtpPort,
+      tls: true,
+      auth: {
+        username: smtpUser!,
+        password: smtpPass!,
+      },
+    },
+  });
+
+  await client.send({
+    from: fromEmail!,
+    to,
+    subject,
+    content: html,
+  });
+  await client.close();
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,11 +74,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Send confirmation email to user
-    const emailResponse = await resend.emails.send({
-      from: "TradeX <onboarding@resend.dev>",
-      to: [email],
-      subject: "We received your message!",
-      html: `
+    await sendEmail(
+      email,
+      "We received your message!",
+      `
         <!DOCTYPE html>
         <html>
           <head>
@@ -92,10 +117,10 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
           </body>
         </html>
-      `,
-    });
+      `
+    );
 
-    console.log("Email sent successfully:", emailResponse);
+    console.log("Contact email sent successfully via SMTP");
 
     return new Response(
       JSON.stringify({ success: true, message: "Contact form submitted successfully" }),
