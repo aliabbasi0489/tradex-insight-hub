@@ -134,27 +134,39 @@ export default function Auth() {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    try {
+      const { error } = await supabase.functions.invoke('send-2fa-code', {
+        body: {
+          email: resetEmail,
+          type: 'reset-password'
+        }
+      });
 
-    setIsLoading(false);
+      setIsLoading(false);
 
-    if (error) {
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Check your email",
+        description: "We've sent you a password reset link.",
+      });
+      setShowForgotPassword(false);
+      setResetEmail("");
+    } catch (error: any) {
+      setIsLoading(false);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to send reset email",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "Check your email",
-      description: "We've sent you a password reset link.",
-    });
-    setShowForgotPassword(false);
-    setResetEmail("");
   };
 
   return (
