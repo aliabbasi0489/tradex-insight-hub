@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.stock-prediction]
 verify_jwt = false
+
+[functions.lstm-prediction]
+verify_jwt = false

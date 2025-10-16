@@ -186,14 +186,18 @@ export const apiService = {
     }
   },
 
-  // Predictions
+  // Predictions using LSTM models
   getPrediction: async (ticker: string, predictionType: string, days: number): Promise<PredictionResponse> => {
     try {
-      const { data, error } = await supabase.functions.invoke('stock-prediction', {
+      const { data, error } = await supabase.functions.invoke('lstm-prediction', {
         body: { ticker, prediction_type: predictionType, days }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('LSTM prediction error:', error);
+        throw new Error(error.message || 'Failed to get prediction');
+      }
+      
       return data;
     } catch (error: any) {
       console.error('Error getting prediction:', error);

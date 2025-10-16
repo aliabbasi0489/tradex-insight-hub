@@ -14,6 +14,10 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 import openai
+import tensorflow as tf
+from tensorflow import keras
+import joblib
+from pathlib import Path
 
 load_dotenv()
 
@@ -384,6 +388,103 @@ async def get_dashboard(current_user: str = Depends(get_current_user)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/lstm_predict")
+async def lstm_predict(ticker: str, prediction_type: str, days: int, current_user: str = Depends(get_current_user)):
+    """Generate predictions using trained LSTM models"""
+    try:
+        # Check if model exists
+        model_dir = Path(f"results_lstm_prophet/{ticker}/{prediction_type}")
+        
+        if not model_dir.exists():
+            raise HTTPException(
+                status_code=404, 
+                detail=f"No trained model found for {ticker} - {prediction_type}. Available tickers with models: AMZN"
+            )
+        
+        # Load the LSTM model
+        lstm_model_path = model_dir / f"{prediction_type}_lstm.h5"
+        scaler_path = model_dir / f"{prediction_type}_scaler.pkl"
+        
+        if not lstm_model_path.exists() or not scaler_path.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Model files not found for {ticker} - {prediction_type}"
+            )
+        
+        # Load model and scaler
+        lstm_model = keras.models.load_model(str(lstm_model_path))
+        scaler = joblib.load(str(scaler_path))
+        
+        # Fetch recent historical data
+        stock = yf.Ticker(ticker)
+        hist = stock.history(period="60d")  # Get 60 days of data
+        
+        if hist.empty:
+            raise HTTPException(status_code=404, detail="No historical data available")
+        
+        # Prepare data for prediction
+        column_name = prediction_type.capitalize()
+        if column_name == 'Volume':
+            data = hist['Volume'].values
+        else:
+            data = hist[column_name].values
+        
+        # Get current price
+        current_price = float(data[-1])
+        
+        # Scale the data
+        scaled_data = scaler.transform(data.reshape(-1, 1))
+        
+        # Prepare input sequence (typically LSTM uses 60 days lookback)
+        lookback = 60
+        if len(scaled_data) < lookback:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Insufficient historical data. Need at least {lookback} days"
+            )
+        
+        # Get the last 'lookback' days
+        last_sequence = scaled_data[-lookback:]
+        
+        # Generate predictions
+        predictions = []
+        current_sequence = last_sequence.copy()
+        
+        for i in range(days):
+            # Reshape for LSTM input [samples, time steps, features]
+            input_data = current_sequence.reshape(1, lookback, 1)
+            
+            # Predict next value
+            predicted_scaled = lstm_model.predict(input_data, verbose=0)
+            
+            # Inverse transform to get actual price
+            predicted_price = scaler.inverse_transform(predicted_scaled)[0][0]
+            
+            # Calculate future date
+            future_date = datetime.now() + timedelta(days=i+1)
+            
+            predictions.append({
+                "time": future_date.strftime("%Y-%m-%d"),
+                "predicted_price": round(float(predicted_price), 2)
+            })
+            
+            # Update sequence for next prediction
+            current_sequence = np.append(current_sequence[1:], predicted_scaled)
+        
+        return {
+            "ticker": ticker,
+            "prediction_type": prediction_type,
+            "days": days,
+            "current_price": round(current_price, 2),
+            "forecast_data": predictions,
+            "model_info": f"LSTM model trained on historical {ticker} {prediction_type} data"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during prediction: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
