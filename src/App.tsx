@@ -21,9 +21,6 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
-  const { useSessionManagement } = require('@/hooks/useSessionManagement');
-  useSessionManagement();
-  
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
