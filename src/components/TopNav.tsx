@@ -8,13 +8,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export function TopNav() {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem('demo_token');
-    navigate('/');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth');
   };
 
   return (

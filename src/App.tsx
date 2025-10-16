@@ -11,6 +11,7 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import LiveStocks from "./pages/LiveStocks";
 import AIAdvisory from "./pages/AIAdvisory";
 import Dashboard from "./pages/Dashboard";
@@ -98,6 +99,7 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
