@@ -15,13 +15,13 @@ export default function Auth() {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     localStorage.setItem('auth_token', 'demo_token');
-    navigate('/stocks');
+    navigate('/dashboard');
   };
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     localStorage.setItem('auth_token', 'demo_token');
-    navigate('/stocks');
+    navigate('/dashboard');
   };
 
   return (
