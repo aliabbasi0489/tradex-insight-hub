@@ -36,6 +36,12 @@ export function TopNav() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-popover">
+            <DropdownMenuItem onClick={() => navigate('/about')} className="cursor-pointer">
+              About
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/contact')} className="cursor-pointer">
+              Contact
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
               Logout
             </DropdownMenuItem>
