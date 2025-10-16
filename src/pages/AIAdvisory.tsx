@@ -1,47 +1,55 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, TrendingUp, Eye, Save, ShoppingCart } from 'lucide-react';
+import { TrendingUp, Save } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { apiService, StockRecommendation } from '@/lib/api';
+import { TradingViewIframe } from '@/components/TradingViewIframe';
 import { toast } from 'sonner';
-import { StockAnalysisModal } from '@/components/StockAnalysisModal';
 
 export default function AIAdvisory() {
   const [riskLevel, setRiskLevel] = useState<'Low' | 'Medium' | 'High'>('Medium');
-  const [horizon, setHorizon] = useState<'Short' | 'Long'>('Long');
+  const [investmentHorizon, setInvestmentHorizon] = useState<'Short' | 'Long'>('Long');
+  const [investmentAmount, setInvestmentAmount] = useState('');
   const [recommendations, setRecommendations] = useState<StockRecommendation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedStock, setSelectedStock] = useState<StockRecommendation | null>(null);
-  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [showPrediction, setShowPrediction] = useState(false);
+  const [selectedTicker, setSelectedTicker] = useState('');
 
   const handleGetRecommendations = async () => {
+    if (!investmentAmount || parseFloat(investmentAmount) <= 0) {
+      toast.error('Please enter a valid investment amount');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const data = await apiService.getRecommendations({
         risk_level: riskLevel,
-        investment_horizon: horizon,
+        investment_horizon: investmentHorizon,
       });
       setRecommendations(data);
-      toast.success(`Found ${data.length} recommendations for you!`);
+      toast.success('AI recommendations generated!');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to fetch recommendations');
+      toast.error(error.response?.data?.message || 'Failed to get recommendations');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleAnalyze = (stock: StockRecommendation) => {
-    setSelectedStock(stock);
-    setShowAnalysis(true);
+  const handleAnalyze = (ticker: string) => {
+    setSelectedTicker(ticker);
+    setShowPrediction(true);
   };
 
   const handleSave = async (ticker: string) => {
     try {
       await apiService.saveStock(ticker);
-      toast.success(`${ticker} saved to your dashboard!`);
+      toast.success(`${ticker} saved to dashboard!`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to save stock');
     }
@@ -49,23 +57,17 @@ export default function AIAdvisory() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <Sparkles className="w-8 h-8 text-primary" />
-        <h1 className="text-3xl font-bold">AI Advisory</h1>
-      </div>
+      <h1 className="text-3xl font-bold">AI Stock Advisory</h1>
 
       <Card>
         <CardHeader>
           <CardTitle>Get AI-Powered Recommendations</CardTitle>
-          <CardDescription>
-            Configure your preferences and let our AI find the best stocks for you
-          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Risk Level</Label>
-              <Select value={riskLevel} onValueChange={(v) => setRiskLevel(v as any)}>
+              <Select value={riskLevel} onValueChange={(value: any) => setRiskLevel(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -79,7 +81,10 @@ export default function AIAdvisory() {
 
             <div className="space-y-2">
               <Label>Investment Horizon</Label>
-              <Select value={horizon} onValueChange={(v) => setHorizon(v as any)}>
+              <Select
+                value={investmentHorizon}
+                onValueChange={(value: any) => setInvestmentHorizon(value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -89,17 +94,37 @@ export default function AIAdvisory() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label>Investment Amount ($)</Label>
+              <Input
+                type="number"
+                placeholder="Enter amount"
+                value={investmentAmount}
+                onChange={(e) => setInvestmentAmount(e.target.value)}
+                min="1"
+                step="100"
+              />
+            </div>
           </div>
 
-          <Button onClick={handleGetRecommendations} disabled={isLoading} className="w-full">
-            {isLoading ? 'Analyzing...' : 'Get Recommendations'}
+          <Button 
+            onClick={handleGetRecommendations}
+            disabled={isLoading}
+            className="w-full md:w-auto"
+          >
+            {isLoading ? 'Generating...' : 'Get Recommendations'}
           </Button>
         </CardContent>
       </Card>
 
       {recommendations.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-2xl font-semibold">Top Recommendations</h2>
+          <h2 className="text-2xl font-semibold flex items-center gap-2">
+            <TrendingUp className="w-6 h-6 text-success" />
+            Recommended Stocks
+          </h2>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {recommendations.map((stock) => (
               <Card key={stock.ticker} className="hover:border-primary transition-colors">
@@ -107,57 +132,29 @@ export default function AIAdvisory() {
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-lg">{stock.ticker}</CardTitle>
-                      <CardDescription>{stock.name}</CardDescription>
+                      <div className="text-sm text-muted-foreground">{stock.name}</div>
                     </div>
-                    <Badge className="bg-gradient-success">
-                      Score: {stock.forecast_score}
+                    <Badge variant="outline">
+                      Score: {stock.forecast_score.toFixed(1)}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <div className="text-sm text-muted-foreground">Current Price</div>
-                    <div className="text-2xl font-bold text-success">
-                      ${stock.current_price.toFixed(2)}
-                    </div>
-                  </div>
-
-                  {stock.chart_data && stock.chart_data.length > 0 && (
-                    <div className="h-20 flex items-end gap-1">
-                      {stock.chart_data.slice(-20).map((point, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 bg-gradient-success rounded-sm opacity-70"
-                          style={{
-                            height: `${(point.price / Math.max(...stock.chart_data!.map((p) => p.price))) * 100}%`,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="flex items-center justify-between gap-2">
                     <Button
-                      size="sm"
                       variant="outline"
-                      onClick={() => handleAnalyze(stock)}
-                      className="w-full"
+                      size="sm"
+                      onClick={() => handleAnalyze(stock.ticker)}
+                      className="flex-1"
                     >
-                      <Eye className="w-4 h-4" />
+                      AI Prediction
                     </Button>
                     <Button
-                      size="sm"
                       variant="outline"
+                      size="sm"
                       onClick={() => handleSave(stock.ticker)}
-                      className="w-full"
                     >
                       <Save className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="w-full bg-gradient-success"
-                    >
-                      <ShoppingCart className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -167,13 +164,13 @@ export default function AIAdvisory() {
         </div>
       )}
 
-      {selectedStock && (
-        <StockAnalysisModal
-          stock={selectedStock}
-          open={showAnalysis}
-          onOpenChange={setShowAnalysis}
-        />
-      )}
+      <Dialog open={showPrediction} onOpenChange={setShowPrediction}>
+        <DialogContent className="max-w-6xl h-[80vh]">
+          <div className="flex-1">
+            <TradingViewIframe symbol={`NASDAQ:${selectedTicker}`} height="100%" />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

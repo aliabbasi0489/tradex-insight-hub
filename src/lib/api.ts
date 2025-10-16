@@ -219,6 +219,14 @@ export const apiService = {
   // Alerts
   createAlert: async (alert: AlertRequest) => {
     if (DEMO_MODE) {
+      const alerts = JSON.parse(localStorage.getItem('demo_alerts') || '[]');
+      const newAlert = {
+        id: Date.now().toString(),
+        ...alert,
+        active: true
+      };
+      alerts.push(newAlert);
+      localStorage.setItem('demo_alerts', JSON.stringify(alerts));
       return { message: 'Alert created successfully (Demo Mode)' };
     }
 
@@ -227,6 +235,14 @@ export const apiService = {
       return response.data;
     } catch (error: any) {
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        const alerts = JSON.parse(localStorage.getItem('demo_alerts') || '[]');
+        const newAlert = {
+          id: Date.now().toString(),
+          ...alert,
+          active: true
+        };
+        alerts.push(newAlert);
+        localStorage.setItem('demo_alerts', JSON.stringify(alerts));
         return { message: 'Alert created successfully (Demo Mode)' };
       }
       throw error;
@@ -258,9 +274,10 @@ export const apiService = {
   getSavedStocks: async () => {
     if (DEMO_MODE) {
       const saved = JSON.parse(localStorage.getItem('demo_saved_stocks') || '["AAPL", "MSFT"]');
+      const alerts = JSON.parse(localStorage.getItem('demo_alerts') || '[]');
       return {
         saved_stocks: saved.map((ticker: string) => generateMockStockData(ticker)),
-        alerts: []
+        alerts: alerts
       };
     }
 
@@ -270,9 +287,10 @@ export const apiService = {
     } catch (error: any) {
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
         const saved = JSON.parse(localStorage.getItem('demo_saved_stocks') || '["AAPL", "MSFT"]');
+        const alerts = JSON.parse(localStorage.getItem('demo_alerts') || '[]');
         return {
           saved_stocks: saved.map((ticker: string) => generateMockStockData(ticker)),
-          alerts: []
+          alerts: alerts
         };
       }
       throw error;
