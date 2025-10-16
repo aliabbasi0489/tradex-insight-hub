@@ -1,34 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { Resend } from "npm:resend@2.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-const smtpHost = Deno.env.get('SMTP_HOST');
-const smtpPort = Number(Deno.env.get('SMTP_PORT') ?? 587);
-const smtpUser = Deno.env.get('SMTP_USER');
-const smtpPass = Deno.env.get('SMTP_PASSWORD');
-const fromEmail = Deno.env.get('FROM_EMAIL') || Deno.env.get('FROM_MAIL') || 'no-reply@example.com';
-
-const sendEmail = async (to: string, subject: string, html: string) => {
-  const client = new SMTPClient({
-    connection: {
-      hostname: smtpHost!,
-      port: smtpPort,
-      tls: true,
-      auth: {
-        username: smtpUser!,
-        password: smtpPass!,
-      },
-    },
-  });
-
-  await client.send({
-    from: fromEmail!,
-    to,
-    subject,
-    content: html,
-  });
-  await client.close();
-};
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,10 +63,11 @@ const handler = async (req: Request): Promise<Response> => {
       'reset-password': 'Reset Your TradeX Password'
     };
 
-    await sendEmail(
-      email,
-      emailSubjects[type],
-      `
+    const emailResponse = await resend.emails.send({
+      from: "TradeX Security <onboarding@resend.dev>",
+      to: [email],
+      subject: emailSubjects[type],
+      html: `
         <!DOCTYPE html>
         <html>
           <head>
@@ -134,10 +109,10 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
           </body>
         </html>
-      `
-    );
+      `,
+    });
 
-    console.log("2FA email sent successfully via SMTP");
+    console.log("2FA email sent successfully:", emailResponse);
 
     return new Response(
       JSON.stringify({ success: true, message: "2FA code sent successfully" }),
