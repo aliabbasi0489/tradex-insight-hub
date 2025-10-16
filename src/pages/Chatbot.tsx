@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send, Bot, User } from 'lucide-react';
-import { apiService } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface Message {
@@ -50,20 +50,24 @@ export default function Chatbot() {
     setIsLoading(true);
 
     try {
-      const response = await apiService.sendChatMessage(input);
-      
+      const { data, error } = await supabase.functions.invoke('chatbot', {
+        body: { message: input }
+      });
+
+      if (error) throw error;
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: response.response,
+        content: data.response,
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to get response from chatbot');
+      console.error('Chatbot error:', error);
+      toast.error('Failed to get response from chatbot');
       
-      // Add error message
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
