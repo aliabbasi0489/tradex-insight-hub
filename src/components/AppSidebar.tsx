@@ -20,6 +20,8 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const menuItems = [
   { title: "Live Stock Data", url: "/stocks", icon: TrendingUp },
@@ -30,9 +32,13 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    window.location.href = '/auth';
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (!error) {
+      navigate('/auth', { replace: true });
+    }
   };
 
   return (
