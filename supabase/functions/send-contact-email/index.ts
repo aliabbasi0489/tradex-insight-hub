@@ -1,18 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { Resend } from "npm:resend@2.0.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-const client = new SMTPClient({
-  connection: {
-    hostname: "smtp.gmail.com",
-    port: 587,
-    tls: true,
-    auth: {
-      username: "ra147001y@gmail.com",
-      password: "eyqw gyuh ssky yhqh", // ⚠️ Replace with correct password before production
-    },
-  },
-});
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,28 +27,30 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending contact form email to:", email);
 
-    // ─── Supabase Setup ────────────────────────────────────────────────
-    const supabaseUrl = "https://your-supabase-url.supabase.co"; // ⚠️ Replace
-    const supabaseKey = "your-service-role-key"; // ⚠️ Replace
+    // Store in database
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { error: dbError } = await supabase.from("contact_submissions").insert({
-      name,
-      email,
-      subject,
-      message_type: messageType,
-      message,
-    });
+    const { error: dbError } = await supabase
+      .from('contact_submissions')
+      .insert({
+        name,
+        email,
+        subject,
+        message_type: messageType,
+        message,
+      });
 
     if (dbError) {
       console.error("Database error:", dbError);
       throw new Error("Failed to store contact submission");
     }
 
-    // ─── Send Confirmation Email ───────────────────────────────────────
-    await client.send({
-      from: "ra147001y@gmail.com",
-      to: email,
+    // Send confirmation email to user
+    const emailResponse = await resend.emails.send({
+      from: "TradeX <onboarding@resend.dev>",
+      to: [email],
       subject: "We received your message!",
       html: `
         <!DOCTYPE html>
@@ -81,14 +73,18 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               <div class="content">
                 <p>We have received your message and appreciate you taking the time to contact us.</p>
+                
                 <div class="highlight">
                   <strong>Your Message:</strong><br>
                   <strong>Subject:</strong> ${subject}<br>
                   <strong>Type:</strong> ${messageType}<br>
                   <strong>Message:</strong> ${message}
                 </div>
+                
                 <p>Our team will review your inquiry and get back to you as soon as possible.</p>
-                <p>Best regards,<br><strong>The TradeX Team</strong></p>
+                
+                <p>Best regards,<br>
+                <strong>The TradeX Team</strong></p>
               </div>
               <div class="footer">
                 <p>© 2025 TradeX. All rights reserved.</p>
@@ -99,25 +95,24 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    await client.close();
-    console.log("✅ Email sent successfully");
+    console.log("Email sent successfully:", emailResponse);
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Contact form submitted successfully",
-      }),
+      JSON.stringify({ success: true, message: "Contact form submitted successfully" }),
       {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
-      },
+      }
     );
   } catch (error: any) {
-    console.error("❌ Error in send-contact-email:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    console.error("Error in send-contact-email function:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
   }
 };
 
