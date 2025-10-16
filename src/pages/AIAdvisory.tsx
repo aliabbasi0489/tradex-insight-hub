@@ -6,9 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Save } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { apiService, StockRecommendation } from '@/lib/api';
-import { TradingViewIframe } from '@/components/TradingViewIframe';
+import { StockAnalysisModal } from '@/components/StockAnalysisModal';
 import { toast } from 'sonner';
 
 export default function AIAdvisory() {
@@ -18,7 +17,7 @@ export default function AIAdvisory() {
   const [recommendations, setRecommendations] = useState<StockRecommendation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showPrediction, setShowPrediction] = useState(false);
-  const [selectedTicker, setSelectedTicker] = useState('');
+  const [selectedStock, setSelectedStock] = useState<StockRecommendation | null>(null);
 
   const handleGetRecommendations = async () => {
     if (!investmentAmount || parseFloat(investmentAmount) <= 0) {
@@ -41,8 +40,8 @@ export default function AIAdvisory() {
     }
   };
 
-  const handleAnalyze = (ticker: string) => {
-    setSelectedTicker(ticker);
+  const handleAnalyze = (stock: StockRecommendation) => {
+    setSelectedStock(stock);
     setShowPrediction(true);
   };
 
@@ -144,10 +143,10 @@ export default function AIAdvisory() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleAnalyze(stock.ticker)}
+                      onClick={() => handleAnalyze(stock)}
                       className="flex-1"
                     >
-                      AI Prediction
+                      View
                     </Button>
                     <Button
                       variant="outline"
@@ -164,13 +163,13 @@ export default function AIAdvisory() {
         </div>
       )}
 
-      <Dialog open={showPrediction} onOpenChange={setShowPrediction}>
-        <DialogContent className="max-w-6xl h-[80vh]">
-          <div className="flex-1">
-            <TradingViewIframe symbol={`NASDAQ:${selectedTicker}`} height="100%" />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {selectedStock && (
+        <StockAnalysisModal
+          stock={selectedStock}
+          open={showPrediction}
+          onOpenChange={setShowPrediction}
+        />
+      )}
     </div>
   );
 }

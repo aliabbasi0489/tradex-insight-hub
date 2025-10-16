@@ -22,6 +22,7 @@ interface StockAnalysisModalProps {
 }
 
 export function StockAnalysisModal({ stock, open, onOpenChange }: StockAnalysisModalProps) {
+  const [showPredictionForm, setShowPredictionForm] = useState(false);
   const [period, setPeriod] = useState<'Days' | 'Weeks' | 'Seasons' | 'Occasions'>('Days');
   const [prediction, setPrediction] = useState<PredictionResponse | null>(null);
   const [isLoadingPrediction, setIsLoadingPrediction] = useState(false);
@@ -75,40 +76,66 @@ export function StockAnalysisModal({ stock, open, onOpenChange }: StockAnalysisM
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Period Selection */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <Label>Prediction Period</Label>
-                <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Days">Days</SelectItem>
-                    <SelectItem value="Weeks">Weeks</SelectItem>
-                    <SelectItem value="Seasons">Seasons</SelectItem>
-                    <SelectItem value="Occasions">Occasions</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleGetPrediction} disabled={isLoadingPrediction} className="mt-6">
-                {isLoadingPrediction ? 'Loading...' : 'AI Prediction'}
-              </Button>
-            </div>
-
-            {prediction && (
-              <div className="chart-container h-80">
-                <StockChart
-                  data={prediction.forecast_data.map((item) => ({
-                    time: item.time,
-                    price: item.predicted_price,
-                  }))}
-                  isPositive={true}
+          {!showPredictionForm ? (
+            <>
+              {/* TradingView Graph */}
+              <div className="h-96">
+                <iframe
+                  src={`https://www.tradingview.com/widgetembed/?symbol=${stock.ticker}&interval=D&theme=dark&style=1&locale=en&toolbar_bg=f1f3f6&enable_publishing=false&hide_top_toolbar=false&hide_legend=false&save_image=false&container_id=tradingview_chart`}
+                  className="w-full h-full border-0 rounded-lg"
+                  title={`${stock.ticker} Chart`}
                 />
               </div>
-            )}
-          </div>
+              
+              {/* AI Prediction Button */}
+              <div className="flex justify-center">
+                <Button onClick={() => setShowPredictionForm(true)} size="lg">
+                  AI Prediction
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Period Selection Form */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Label>Prediction Period</Label>
+                    <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Days">Days</SelectItem>
+                        <SelectItem value="Weeks">Weeks</SelectItem>
+                        <SelectItem value="Seasons">Seasons</SelectItem>
+                        <SelectItem value="Occasions">Occasions</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleGetPrediction} disabled={isLoadingPrediction} className="mt-6">
+                    {isLoadingPrediction ? 'Loading...' : 'Generate Prediction'}
+                  </Button>
+                </div>
+
+                {prediction && (
+                  <div className="chart-container h-80">
+                    <StockChart
+                      data={prediction.forecast_data.map((item) => ({
+                        time: item.time,
+                        price: item.predicted_price,
+                      }))}
+                      isPositive={true}
+                    />
+                  </div>
+                )}
+                
+                <Button variant="outline" onClick={() => setShowPredictionForm(false)} className="w-full">
+                  Back to Chart
+                </Button>
+              </div>
+            </>
+          )}
 
           {/* Alert Setup */}
           <div className="border-t pt-6">
